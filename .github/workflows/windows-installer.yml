@@ -114,9 +114,9 @@ jobs:
             exit 1
           fi
 
-      - name: Build OnliDesk (Flutter Windows Release)
+      - name: Build OnliDesk (Flutter Windows Release, with monitoring)
         run: |
-          python3 .\build.py --portable --hwcodec --flutter --vram --skip-portable-pack
+          python3 .\build.py --portable --hwcodec --flutter --vram --watch --skip-portable-pack
 
       - name: Install Inno Setup
         run: choco install innosetup -y --no-progress

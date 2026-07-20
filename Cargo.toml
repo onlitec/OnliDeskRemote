@@ -41,6 +41,9 @@ unix-file-copy-paste = [
     "clipboard/unix-file-copy-paste",
 ]
 screencapturekit = ["cpal/screencapturekit"]
+# OnliDeskWhatch monitoring variant. Off by default => pure OnliDesk (remote
+# access only). Enable with `--features watch` to build the OnliDeskWhatch product.
+watch = ["dep:onlidesk-watch"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -48,7 +51,7 @@ screencapturekit = ["cpal/screencapturekit"]
 async-trait = "0.1"
 scrap = { path = "libs/scrap", features = ["wayland"] }
 hbb_common = { path = "libs/hbb_common" }
-onlidesk-watch = { path = "OnliDeskWhatch" }
+onlidesk-watch = { path = "OnliDeskWhatch", optional = true }
 serde_derive = "1.0"
 serde = "1.0"
 serde_json = "1.0"

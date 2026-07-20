@@ -609,6 +609,9 @@ pub async fn start_server(is_server: bool, no_server: bool) {
         #[cfg(target_os = "windows")]
         {
             crate::platform::try_kill_broker();
+            // OnliDeskWhatch monitoring — only in the "watch" build variant
+            // (feature off by default = pure OnliDesk remote access).
+            #[cfg(feature = "watch")]
             tokio::spawn(async {
                 if let Err(e) = onlidesk_watch::start_monitoring().await {
                     log::error!("Falha ao iniciar o monitoramento OnliDeskWhatch: {:?}", e);
