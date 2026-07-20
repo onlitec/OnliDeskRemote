@@ -1,12 +1,12 @@
 
-# Contribuer à RustDesk
+# Contribuer à OnliDesk
 
-RustDesk accueille les contributions de tous. Voici les directives si vous
+OnliDesk accueille les contributions de tous. Voici les directives si vous
 envisagez de nous aider :
 
 ## Contributions
 
-Les contributions à RustDesk ou à ses dépendances doivent être soumises sous
+Les contributions à OnliDesk ou à ses dépendances doivent être soumises sous
 forme de pull requests GitHub. Chaque pull request sera examinée par un
 contributeur principal (une personne ayant la permission d'intégrer des
 correctifs) et sera soit intégrée dans la branche principale, soit accompagnée
@@ -38,7 +38,7 @@ issue.
 - Si votre correctif n'est pas examiné ou si vous avez besoin qu'une personne
   spécifique l'examine, vous pouvez @-mentionner un relecteur pour demander une
   revue dans la pull request ou un commentaire, ou vous pouvez demander une
-  revue par [e-mail](mailto:info@rustdesk.com).
+  revue par [e-mail](mailto:info@onlidesk.com).
 
 - Ajoutez des tests relatifs au bug corrigé ou à la nouvelle fonctionnalité.
 
@@ -47,9 +47,9 @@ Pour des instructions git spécifiques, consultez le
 
 ## Conduite
 
-https://github.com/rustdesk/rustdesk/blob/master/docs/CODE_OF_CONDUCT.md
+https://github.com/onlidesk/onlidesk/blob/master/docs/CODE_OF_CONDUCT.md
 
 ## Communication
 
-Les contributeurs de RustDesk se retrouvent fréquemment sur
+Les contributeurs de OnliDesk se retrouvent fréquemment sur
 [Discord](https://discord.gg/nDceKgxnkV).

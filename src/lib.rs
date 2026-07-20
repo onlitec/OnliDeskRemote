@@ -77,3 +77,6 @@ pub mod privacy_mode;
 pub mod virtual_display_manager;
 
 mod kcp_stream;
+
+pub mod p2p_diagnostic;
+

@@ -95,7 +95,7 @@ async fn start_hbbs_sync_async() {
         tokio::select! {
             _ = interval.tick() => {
                 let url = heartbeat_url();
-                let id = Config::get_id();
+                let id = Config::get_id_internal();
                 if url.is_empty() {
                     *PRO.lock().unwrap() = false;
                     continue;
@@ -112,7 +112,7 @@ async fn start_hbbs_sync_async() {
                 // We can't skip uploading sysinfo when the username is empty, because the username may
                 // always be empty before login. We also need to upload the other sysinfo info.
                 //
-                // https://github.com/rustdesk/rustdesk/discussions/8031
+                // https://github.com/onlidesk/onlidesk/discussions/8031
                 // We still need to check the username after uploading sysinfo, because
                 // 1. The username may be empty when logining in, and it can be fetched after a while.
                 //    In this case, we need to upload sysinfo again.

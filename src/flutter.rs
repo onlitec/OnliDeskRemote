@@ -99,7 +99,7 @@ fn load_plugin_in_app_path(dll_name: &str) -> Result<Library, LibError> {
     }
 }
 
-/// FFI for rustdesk core's main entry.
+/// FFI for onlidesk core's main entry.
 /// Return true if the app should continue running with UI(possibly Flutter), false if the app should exit.
 #[cfg(not(windows))]
 #[no_mangle]
@@ -198,7 +198,7 @@ pub unsafe extern "C" fn get_rustdesk_app_name(buffer: *mut u16, length: i32) ->
 }
 
 #[derive(Default)]
-struct SessionHandler {
+pub struct SessionHandler {
     event_stream: Option<StreamSink<EventToUI>>,
     // displays of current session.
     // We need this variable to check if the display is in use before pushing rgba to flutter.
@@ -216,7 +216,7 @@ enum RenderType {
 #[derive(Clone)]
 pub struct FlutterHandler {
     // ui session id -> display handler data
-    session_handlers: Arc<RwLock<HashMap<SessionID, SessionHandler>>>,
+    pub session_handlers: Arc<RwLock<HashMap<SessionID, SessionHandler>>>,
     display_rgbas: Arc<RwLock<HashMap<usize, RgbaData>>>,
     peer_info: Arc<RwLock<PeerInfo>>,
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -733,6 +733,33 @@ impl InvokeUiSession for FlutterHandler {
     }
 
     fn set_connection_type(&self, is_secured: bool, direct: bool, stream_type: &str) {
+        let method = if direct {
+            if stream_type.to_lowercase().contains("udp") {
+                crate::p2p_diagnostic::ConnectionMethod::P2PUdp
+            } else {
+                crate::p2p_diagnostic::ConnectionMethod::P2PTcp
+            }
+        } else {
+            if stream_type.to_lowercase().contains("udp") {
+                crate::p2p_diagnostic::ConnectionMethod::RelayUdp
+            } else {
+                crate::p2p_diagnostic::ConnectionMethod::RelayTcp
+            }
+        };
+
+        if let Ok(keys) = self.session_handlers.read() {
+            for &sid in keys.keys() {
+                let rtt = crate::p2p_diagnostic::CURRENT_RTT.read().unwrap().get(&sid).cloned().unwrap_or(15);
+                crate::p2p_diagnostic::record_session(
+                    sid,
+                    method.clone(),
+                    rtt,
+                    true,
+                    crate::p2p_diagnostic::P2PFailureReason::None,
+                );
+            }
+        }
+
         self.push_event(
             "connection_ready",
             &[

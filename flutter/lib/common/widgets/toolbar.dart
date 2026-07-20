@@ -162,7 +162,7 @@ List<TTextMenu> toolbarControls(BuildContext context, String id, FFI ffi) {
         onPressed: () => ffi.cursorModel.reset()));
   }
 
-  // https://github.com/rustdesk/rustdesk/pull/9731
+  // https://github.com/onlidesk/onlidesk/pull/9731
   // Does not work for connection established by "accept".
   connectWithToken(
       {bool isFileTransfer = false,
@@ -257,6 +257,20 @@ List<TTextMenu> toolbarControls(BuildContext context, String id, FFI ffi) {
       TTextMenu(
           child: Text(translate('Insert Lock')),
           onPressed: () => bind.sessionLockScreen(sessionId: sessionId)),
+    );
+  }
+  // Change unattended password
+  if (isDefaultConn &&
+      perms['keyboard'] != false &&
+      versionCmp(pi.version, '1.2.0') >= 0) {
+    v.add(
+      TTextMenu(
+        child: Text(translate('Change unattended password')),
+        onPressed: () => showChangeUnattendedPasswordDialog(
+          sessionId,
+          ffi.dialogManager,
+        ),
+      ),
     );
   }
   // blockUserInput

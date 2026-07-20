@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=OnliDesk
+NoDisplay=true
+MimeType=x-scheme-handler/onlidesk;
+TryExec=onlidesk
+Exec=onlidesk %u
+Icon=onlidesk
+Terminal=false
+Type=Application
+StartupNotify=false
+StartupWMClass=onlidesk

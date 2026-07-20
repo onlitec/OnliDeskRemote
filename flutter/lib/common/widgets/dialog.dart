@@ -1352,6 +1352,66 @@ void showRestartRemoteDevice(PeerInfo pi, String id, SessionID sessionId,
   if (res == true) bind.sessionRestartRemoteDevice(sessionId: sessionId);
 }
 
+void showChangeUnattendedPasswordDialog(
+  SessionID sessionId,
+  OverlayDialogManager dialogManager,
+) {
+  final controller = TextEditingController();
+  dialogManager.show((setState, close, context) {
+    submit() {
+      var text = controller.text.trim();
+      if (text.isNotEmpty) {
+        bind.sessionChangeUnattendedPassword(
+          sessionId: sessionId,
+          password: text,
+        );
+      }
+      close();
+    }
+
+    return CustomAlertDialog(
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.lock_reset_rounded, color: MyTheme.accent),
+          Flexible(
+            child: Text(translate('Change unattended password'))
+                .paddingOnly(left: 10),
+          ),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              translate('Enter new unattended connection password:'),
+              style: const TextStyle(fontSize: 14),
+            ).paddingOnly(bottom: 8),
+          ),
+          PasswordWidget(controller: controller, autoFocus: true),
+        ],
+      ),
+      actions: [
+        dialogButton(
+          "Cancel",
+          icon: const Icon(Icons.close_rounded),
+          onPressed: close,
+          isOutline: true,
+        ),
+        dialogButton(
+          "OK",
+          icon: const Icon(Icons.done_rounded),
+          onPressed: submit,
+        ),
+      ],
+      onSubmit: submit,
+      onCancel: close,
+    );
+  });
+}
+
 showSetOSPassword(
   SessionID sessionId,
   bool login,

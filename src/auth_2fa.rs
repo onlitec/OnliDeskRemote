@@ -1,4 +1,4 @@
-use hbb_common::{
+﻿use hbb_common::{
     anyhow::anyhow,
     bail,
     config::Config,
@@ -14,7 +14,7 @@ lazy_static::lazy_static! {
     static ref CURRENT_2FA: Mutex<Option<(TOTPInfo, TOTP)>> = Mutex::new(None);
 }
 
-const ISSUER: &str = "RustDesk";
+const ISSUER: &str = "OnliDesk";
 const TAG_LOGIN: &str = "Connection";
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -77,7 +77,7 @@ pub fn generate2fa() -> String {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let id = crate::ipc::get_id();
     #[cfg(any(target_os = "android", target_os = "ios"))]
-    let id = Config::get_id();
+    let id = Config::get_id_internal();
     if let Ok(info) = TOTPInfo::gen_totp_info(id, 6) {
         if let Ok(totp) = info.new_totp() {
             let code = totp.get_url();

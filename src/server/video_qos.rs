@@ -42,7 +42,7 @@ const MAX_BR_MULTIPLE: f32 = 1.0;
 const HISTORY_DELAY_LEN: usize = 2;
 const ADJUST_RATIO_INTERVAL: usize = 3; // Adjust quality ratio every 3 seconds
 const DYNAMIC_SCREEN_THRESHOLD: usize = 2; // Allow increase quality ratio if encode more than 2 times in one second
-const DELAY_THRESHOLD_150MS: u32 = 150; // 150ms is the threshold for good network condition
+const DELAY_THRESHOLD_150MS: u32 = 250; // 250ms is a more realistic threshold for good network condition
 
 #[derive(Default, Debug, Clone)]
 struct UserDelay {

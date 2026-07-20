@@ -146,8 +146,7 @@ impl VideoFrameController {
         }
     }
 
-    #[tokio::main(flavor = "current_thread")]
-    async fn try_wait_next(&mut self, fetched_conn_ids: &mut HashSet<i32>, timeout_millis: u64) {
+    fn try_wait_next(&mut self, fetched_conn_ids: &mut HashSet<i32>, timeout_millis: u64) {
         if self.send_conn_ids.is_empty() {
             return;
         }
@@ -165,30 +164,44 @@ impl VideoFrameController {
                 }
             }
         };
-        let mut receiver_guard = receiver.lock().await;
-        match tokio::time::timeout(timeout_dur, receiver_guard.recv()).await {
-            Err(_) => {
-                // break if timeout
-                // log::error!("blocking wait frame receiving timeout {}", timeout_millis);
-            }
-            Ok(Some((id, instant))) => {
-                if let Some(tm) = instant {
-                    log::trace!("Channel recv latency: {}", tm.elapsed().as_secs_f32());
+
+        let mut f_ids = HashSet::new();
+        let future = async move {
+            let mut receiver_guard = receiver.lock().await;
+            match tokio::time::timeout(timeout_dur, receiver_guard.recv()).await {
+                Err(_) => {}
+                Ok(Some((id, instant))) => {
+                    if let Some(tm) = instant {
+                        log::trace!("Channel recv latency: {}", tm.elapsed().as_secs_f32());
+                    }
+                    f_ids.insert(id);
                 }
-                fetched_conn_ids.insert(id);
+                Ok(None) => {}
             }
-            Ok(None) => {
-                // this branch would never be reached
-            }
-        }
-        while !receiver_guard.is_empty() {
-            if let Some((id, instant)) = receiver_guard.recv().await {
-                if let Some(tm) = instant {
-                    log::trace!("Channel recv latency: {}", tm.elapsed().as_secs_f32());
+            while !receiver_guard.is_empty() {
+                if let Some((id, instant)) = receiver_guard.recv().await {
+                    if let Some(tm) = instant {
+                        log::trace!("Channel recv latency: {}", tm.elapsed().as_secs_f32());
+                    }
+                    f_ids.insert(id);
                 }
-                fetched_conn_ids.insert(id);
             }
-        }
+            f_ids
+        };
+
+        let result_ids = if let Ok(handle) = tokio::runtime::Handle::try_current() {
+            handle.block_on(future)
+        } else {
+            lazy_static::lazy_static! {
+                static ref FALLBACK_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .expect("Failed to build fallback video runtime");
+            }
+            FALLBACK_RUNTIME.block_on(future)
+        };
+
+        fetched_conn_ids.extend(result_ids);
     }
 }
 
@@ -651,8 +664,16 @@ fn run(vs: VideoService) -> ResultType<()> {
     let capture_width = c.width;
     let capture_height = c.height;
     let (mut second_instant, mut send_counter) = (Instant::now(), 0);
+    #[cfg(windows)]
+    let last_dxgi_retry = Instant::now();
 
     while sp.ok() {
+        #[cfg(windows)]
+        if c.is_gdi() && last_dxgi_retry.elapsed().as_secs() >= 30 {
+            log::info!("Trying to recover from GDI fallback back to DXGI capture...");
+            bail!("SWITCH");
+        }
+
         #[cfg(windows)]
         check_uac_switch(c.privacy_mode_id, c._capturer_privacy_mode_id)?;
         check_qos(
@@ -810,10 +831,10 @@ fn run(vs: VideoService) -> ResultType<()> {
                     if !is_x11() {
                         if would_block_count >= 100 {
                             // to-do: Unknown reason for WouldBlock 100 times (seconds = 100 * 1 / fps)
-                            // https://github.com/rustdesk/rustdesk/blob/63e6b2f8ab51743e77a151e2b7ff18816f5fa2fb/libs/scrap/src/common/wayland.rs#L81
+                            // https://github.com/onlidesk/onlidesk/blob/63e6b2f8ab51743e77a151e2b7ff18816f5fa2fb/libs/scrap/src/common/wayland.rs#L81
                             //
                             // Do not reset the capturer for now, as it will cause the prompt to show every few minutes.
-                            // https://github.com/rustdesk/rustdesk/issues/4276
+                            // https://github.com/onlidesk/onlidesk/issues/4276
                             //
                             // super::wayland::clear();
                             // bail!("Wayland capturer none 100 times, try restart capture");
@@ -1052,7 +1073,7 @@ fn get_recorder(
         };
         Recorder::new(RecorderContext {
             server: true,
-            id: Config::get_id(),
+            id: Config::get_id_internal(),
             dir: crate::ui_interface::video_save_directory(root),
             display_idx,
             camera,

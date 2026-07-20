@@ -191,7 +191,7 @@ checksum = "e999941b234f3131b00bc13c22d06e8c5ff726d1b6318ac7eb276997bbb4fef0"
 [[package]]
 name = "android-wakelock"
 version = "0.1.0"
-source = "git+https://github.com/rustdesk-org/android-wakelock#d0292e5a367e627c4fa6f1ca6bdfad005dca7d90"
+source = "git+https://github.com/onlidesk-org/android-wakelock#d0292e5a367e627c4fa6f1ca6bdfad005dca7d90"
 dependencies = [
  "jni",
  "log",
@@ -292,7 +292,7 @@ checksum = "e16d2d3311acee920a9eb8d33b8cbc1787ce4a264e85f964c2404b969bdcd487"
 [[package]]
 name = "arboard"
 version = "3.4.0"
-source = "git+https://github.com/rustdesk-org/arboard#85be1218668ff218a7b170c9d424fde73e069914"
+source = "git+https://github.com/onlidesk-org/arboard#85be1218668ff218a7b170c9d424fde73e069914"
 dependencies = [
  "clipboard-win",
  "core-graphics 0.23.2",
@@ -1324,7 +1324,7 @@ dependencies = [
 [[package]]
 name = "clipboard-master"
 version = "4.0.0-beta.6"
-source = "git+https://github.com/rustdesk-org/clipboard-master#ddc39f00a6211959489ae683aa6ae6eedf03a809"
+source = "git+https://github.com/onlidesk-org/clipboard-master#ddc39f00a6211959489ae683aa6ae6eedf03a809"
 dependencies = [
  "objc",
  "objc-foundation",
@@ -1477,7 +1477,7 @@ dependencies = [
 [[package]]
 name = "confy"
 version = "0.4.0-2"
-source = "git+https://github.com/rustdesk-org/confy#83db9ec19a2f97e9718aef69e4fc5611bb382479"
+source = "git+https://github.com/onlidesk-org/confy#83db9ec19a2f97e9718aef69e4fc5611bb382479"
 dependencies = [
  "directories-next",
  "serde 1.0.228",
@@ -1740,7 +1740,7 @@ dependencies = [
 [[package]]
 name = "cpal"
 version = "0.15.3"
-source = "git+https://github.com/rustdesk-org/cpal?branch=osx-screencapturekit#6b374bcaed076750ca8fce6da518ab39b882e14a"
+source = "git+https://github.com/onlidesk-org/cpal?branch=osx-screencapturekit#6b374bcaed076750ca8fce6da518ab39b882e14a"
 dependencies = [
  "alsa",
  "cidre",
@@ -2129,7 +2129,7 @@ dependencies = [
 [[package]]
 name = "default_net"
 version = "0.1.0"
-source = "git+https://github.com/rustdesk-org/default_net#78f8f70cd85151a3a2c4a3230d80d5272703c02e"
+source = "git+https://github.com/onlidesk-org/default_net#78f8f70cd85151a3a2c4a3230d80d5272703c02e"
 dependencies = [
  "anyhow",
  "regex",
@@ -2706,7 +2706,7 @@ checksum = "a0474425d51df81997e2f90a21591180b38eccf27292d755f3e30750225c175b"
 [[package]]
 name = "evdev"
 version = "0.11.5"
-source = "git+https://github.com/rustdesk-org/evdev#cec616e37790293d2cd2aa54a96601ed6b1b35a9"
+source = "git+https://github.com/onlidesk-org/evdev#cec616e37790293d2cd2aa54a96601ed6b1b35a9"
 dependencies = [
  "bitvec",
  "libc",
@@ -2820,7 +2820,7 @@ dependencies = [
 [[package]]
 name = "filedescriptor"
 version = "0.8.2"
-source = "git+https://github.com/rustdesk-org/wezterm?branch=rustdesk/pty_based_0.8.1#80174f8009f41565f0fa8c66dab90d4f9211ae16"
+source = "git+https://github.com/onlidesk-org/wezterm?branch=onlidesk/pty_based_0.8.1#80174f8009f41565f0fa8c66dab90d4f9211ae16"
 dependencies = [
  "libc",
  "thiserror 1.0.61",
@@ -3952,7 +3952,7 @@ checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
 [[package]]
 name = "hwcodec"
 version = "0.7.1"
-source = "git+https://github.com/rustdesk-org/hwcodec#398e5a8938dd8768ade0fcdc27ea80e8b4b38738"
+source = "git+https://github.com/onlidesk-org/hwcodec#398e5a8938dd8768ade0fcdc27ea80e8b4b38738"
 dependencies = [
  "bindgen 0.59.2",
  "cc",
@@ -4108,7 +4108,7 @@ dependencies = [
 [[package]]
 name = "impersonate_system"
 version = "0.1.0"
-source = "git+https://github.com/rustdesk-org/impersonate-system#2f429010a5a10b1fe5eceb553c6672fd53d20167"
+source = "git+https://github.com/onlidesk-org/impersonate-system#2f429010a5a10b1fe5eceb553c6672fd53d20167"
 dependencies = [
  "cc",
 ]
@@ -4344,7 +4344,7 @@ dependencies = [
 [[package]]
 name = "kcp-sys"
 version = "0.1.0"
-source = "git+https://github.com/rustdesk-org/kcp-sys#32a6c09fc6223f54aea83981a6aa8995931d29be"
+source = "git+https://github.com/onlidesk-org/kcp-sys#32a6c09fc6223f54aea83981a6aa8995931d29be"
 dependencies = [
  "anyhow",
  "auto_impl",
@@ -4367,7 +4367,7 @@ dependencies = [
 [[package]]
 name = "keepawake"
 version = "0.4.3"
-source = "git+https://github.com/rustdesk-org/keepawake-rs#64d568586dd16551d02120e19668d2b0fec8e3c9"
+source = "git+https://github.com/onlidesk-org/keepawake-rs#64d568586dd16551d02120e19668d2b0fec8e3c9"
 dependencies = [
  "anyhow",
  "cfg-if 1.0.0",
@@ -4685,7 +4685,7 @@ dependencies = [
 [[package]]
 name = "machine-uid"
 version = "0.3.0"
-source = "git+https://github.com/rustdesk-org/machine-uid#381ff579c1dc3a6c54db9dfec47c44bcb0246542"
+source = "git+https://github.com/onlidesk-org/machine-uid#381ff579c1dc3a6c54db9dfec47c44bcb0246542"
 dependencies = [
  "bindgen 0.59.2",
  "cc",
@@ -4695,7 +4695,7 @@ dependencies = [
 [[package]]
 name = "magnum-opus"
 version = "0.4.0"
-source = "git+https://github.com/rustdesk-org/magnum-opus#5cd2bf989c148662fa3a2d9d539a71d71fd1d256"
+source = "git+https://github.com/onlidesk-org/magnum-opus#5cd2bf989c148662fa3a2d9d539a71d71fd1d256"
 dependencies = [
  "bindgen 0.59.2",
  "pkg-config",
@@ -5137,7 +5137,7 @@ dependencies = [
 [[package]]
 name = "nokhwa"
 version = "0.10.7"
-source = "git+https://github.com/rustdesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
+source = "git+https://github.com/onlidesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
 dependencies = [
  "flume",
  "image 0.25.1",
@@ -5152,7 +5152,7 @@ dependencies = [
 [[package]]
 name = "nokhwa-bindings-linux"
 version = "0.1.1"
-source = "git+https://github.com/rustdesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
+source = "git+https://github.com/onlidesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
 dependencies = [
  "nokhwa-core",
  "v4l",
@@ -5161,7 +5161,7 @@ dependencies = [
 [[package]]
 name = "nokhwa-bindings-macos"
 version = "0.2.2"
-source = "git+https://github.com/rustdesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
+source = "git+https://github.com/onlidesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
 dependencies = [
  "block",
  "cocoa-foundation",
@@ -5177,7 +5177,7 @@ dependencies = [
 [[package]]
 name = "nokhwa-bindings-windows"
 version = "0.4.2"
-source = "git+https://github.com/rustdesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
+source = "git+https://github.com/onlidesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
 dependencies = [
  "dlopen",
  "lazy_static",
@@ -5189,7 +5189,7 @@ dependencies = [
 [[package]]
 name = "nokhwa-core"
 version = "0.1.5"
-source = "git+https://github.com/rustdesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
+source = "git+https://github.com/onlidesk-org/nokhwa.git?branch=fix_from_raw_parts#c2f74662b6ce117f7f94301693fdfadc0b1ec91a"
 dependencies = [
  "bytes",
  "image 0.25.1",
@@ -5941,7 +5941,7 @@ dependencies = [
 [[package]]
 name = "pam"
 version = "0.7.0"
-source = "git+https://github.com/rustdesk-org/pam#7bfd25510202cd269292cbdd7c71f3977a6fd762"
+source = "git+https://github.com/onlidesk-org/pam#7bfd25510202cd269292cbdd7c71f3977a6fd762"
 dependencies = [
  "libc",
  "pam-macros",
@@ -5963,7 +5963,7 @@ dependencies = [
 [[package]]
 name = "pam-sys"
 version = "1.0.0-alpha4"
-source = "git+https://github.com/rustdesk-org/pam-sys?branch=fix/v1.0.0-alpha4_gnuc_va_list#3337c9bb9a9c68d7497ec8c93cad2368c26091b7"
+source = "git+https://github.com/onlidesk-org/pam-sys?branch=fix/v1.0.0-alpha4_gnuc_va_list#3337c9bb9a9c68d7497ec8c93cad2368c26091b7"
 dependencies = [
  "bindgen 0.59.2",
  "libc",
@@ -5997,7 +5997,7 @@ dependencies = [
 [[package]]
 name = "parity-tokio-ipc"
 version = "0.7.3-6"
-source = "git+https://github.com/rustdesk-org/parity-tokio-ipc#d0ae39bffe5d5a3e8d82a1b6bcb1ca5a9b2f1c01"
+source = "git+https://github.com/onlidesk-org/parity-tokio-ipc#d0ae39bffe5d5a3e8d82a1b6bcb1ca5a9b2f1c01"
 dependencies = [
  "futures",
  "libc",
@@ -6369,7 +6369,7 @@ checksum = "f84267b20a16ea918e43c6a88433c2d54fa145c92a811b5b047ccbe153674483"
 [[package]]
 name = "portable-pty"
 version = "0.8.1"
-source = "git+https://github.com/rustdesk-org/wezterm?branch=rustdesk/pty_based_0.8.1#80174f8009f41565f0fa8c66dab90d4f9211ae16"
+source = "git+https://github.com/onlidesk-org/wezterm?branch=onlidesk/pty_based_0.8.1#80174f8009f41565f0fa8c66dab90d4f9211ae16"
 dependencies = [
  "anyhow",
  "bitflags 1.3.2",
@@ -6920,7 +6920,7 @@ dependencies = [
 [[package]]
 name = "rdev"
 version = "0.5.0-2"
-source = "git+https://github.com/rustdesk-org/rdev#f9b60b1dd0f3300a1b797d7a74c116683cd232c8"
+source = "git+https://github.com/onlidesk-org/rdev#f9b60b1dd0f3300a1b797d7a74c116683cd232c8"
 dependencies = [
  "cocoa 0.24.1",
  "core-foundation 0.9.4",
@@ -7236,7 +7236,7 @@ dependencies = [
 [[package]]
 name = "rust-pulsectl"
 version = "0.2.12"
-source = "git+https://github.com/rustdesk-org/pulsectl#aa34dde499aa912a3abc5289cc0b547bd07dd6e2"
+source = "git+https://github.com/onlidesk-org/pulsectl#aa34dde499aa912a3abc5289cc0b547bd07dd6e2"
 dependencies = [
  "libpulse-binding",
 ]
@@ -7269,7 +7269,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustdesk"
+name = "onlidesk"
 version = "1.4.6"
 dependencies = [
  "android-wakelock",
@@ -7384,7 +7384,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rustdesk-portable-packer"
+name = "onlidesk-portable-packer"
 version = "1.4.6"
 dependencies = [
  "brotli",
@@ -7576,7 +7576,7 @@ dependencies = [
 [[package]]
 name = "sciter-rs"
 version = "0.5.57"
-source = "git+https://github.com/rustdesk-org/rust-sciter?branch=dyn#5322f3a755a0e6bf999fbc60d1efc35246c0f821"
+source = "git+https://github.com/onlidesk-org/rust-sciter?branch=dyn#5322f3a755a0e6bf999fbc60d1efc35246c0f821"
 dependencies = [
  "lazy_static",
  "libc",
@@ -8351,7 +8351,7 @@ dependencies = [
 [[package]]
 name = "sysinfo"
 version = "0.29.10"
-source = "git+https://github.com/rustdesk-org/sysinfo?branch=rlim_max#90b1705d909a4902dbbbdea37ee64db17841077d"
+source = "git+https://github.com/onlidesk-org/sysinfo?branch=rlim_max#90b1705d909a4902dbbbdea37ee64db17841077d"
 dependencies = [
  "cfg-if 1.0.0",
  "core-foundation-sys 0.8.7",
@@ -8424,7 +8424,7 @@ dependencies = [
 [[package]]
 name = "tao"
 version = "0.25.0"
-source = "git+https://github.com/rustdesk-org/tao?branch=dev#288c219cb0527e509590c2b2d8e7072aa9feb2d3"
+source = "git+https://github.com/onlidesk-org/tao?branch=dev#288c219cb0527e509590c2b2d8e7072aa9feb2d3"
 dependencies = [
  "bitflags 1.3.2",
  "cc",
@@ -8464,7 +8464,7 @@ dependencies = [
 [[package]]
 name = "tao-macros"
 version = "0.1.2"
-source = "git+https://github.com/rustdesk-org/tao?branch=dev#288c219cb0527e509590c2b2d8e7072aa9feb2d3"
+source = "git+https://github.com/onlidesk-org/tao?branch=dev#288c219cb0527e509590c2b2d8e7072aa9feb2d3"
 dependencies = [
  "proc-macro2 1.0.93",
  "quote 1.0.36",
@@ -8568,7 +8568,7 @@ dependencies = [
 [[package]]
 name = "tfc"
 version = "0.7.0"
-source = "git+https://github.com/rustdesk-org/The-Fat-Controller?branch=history/rebase_upstream_20240722#78bb80a8e596e4c14ae57c8448f5fca75f91f2b0"
+source = "git+https://github.com/onlidesk-org/The-Fat-Controller?branch=history/rebase_upstream_20240722#78bb80a8e596e4c14ae57c8448f5fca75f91f2b0"
 dependencies = [
  "anyhow",
  "core-graphics 0.23.2",
@@ -8798,7 +8798,7 @@ dependencies = [
 [[package]]
 name = "tokio-socks"
 version = "0.5.2-3"
-source = "git+https://github.com/rustdesk-org/tokio-socks#bdb9aa3de5bac41602d0742b8ef6bbc6bfebd127"
+source = "git+https://github.com/onlidesk-org/tokio-socks#bdb9aa3de5bac41602d0742b8ef6bbc6bfebd127"
 dependencies = [
  "bytes",
  "either",
@@ -9515,7 +9515,7 @@ dependencies = [
 [[package]]
 name = "wallpaper"
 version = "3.2.0"
-source = "git+https://github.com/rustdesk-org/wallpaper.rs#ce4a0cd3f58327c7cc44d15a63706fb0c022bacf"
+source = "git+https://github.com/onlidesk-org/wallpaper.rs#ce4a0cd3f58327c7cc44d15a63706fb0c022bacf"
 dependencies = [
  "dirs 5.0.1",
  "enquote",
@@ -9790,7 +9790,7 @@ dependencies = [
 [[package]]
 name = "webm"
 version = "1.1.0"
-source = "git+https://github.com/rustdesk-org/rust-webm#d2c4d3ac133c7b0e4c0f656da710b48391981e64"
+source = "git+https://github.com/onlidesk-org/rust-webm#d2c4d3ac133c7b0e4c0f656da710b48391981e64"
 dependencies = [
  "webm-sys",
 ]
@@ -9798,7 +9798,7 @@ dependencies = [
 [[package]]
 name = "webm-sys"
 version = "1.0.4"
-source = "git+https://github.com/rustdesk-org/rust-webm#d2c4d3ac133c7b0e4c0f656da710b48391981e64"
+source = "git+https://github.com/onlidesk-org/rust-webm#d2c4d3ac133c7b0e4c0f656da710b48391981e64"
 dependencies = [
  "cc",
 ]

@@ -41,7 +41,7 @@ pub(super) fn start_listening() -> ResultType<()> {
                                 &Config::get_option("enable-lan-discovery"),
                             )
                         {
-                            let id = Config::get_id();
+                            let id = Config::get_id_internal();
                             if p.id == id {
                                 continue;
                             }
@@ -175,7 +175,7 @@ fn create_broadcast_sockets() -> Vec<UdpSocket> {
     ipv4s.push(Ipv4Addr::UNSPECIFIED); // for robustness
     let mut sockets = Vec::new();
     for v4_addr in ipv4s {
-        // removing v4_addr.is_private() check, https://github.com/rustdesk/rustdesk/issues/4663
+        // removing v4_addr.is_private() check, https://github.com/onlidesk/onlidesk/issues/4663
         if let Ok(s) = UdpSocket::bind(SocketAddr::from((v4_addr, 0))) {
             if s.set_broadcast(true).is_ok() {
                 sockets.push(s);

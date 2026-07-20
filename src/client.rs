@@ -127,7 +127,7 @@ pub const SCRAP_OTHER_VERSION_OR_X11_REQUIRED: &str =
 pub const SCRAP_XDP_PORTAL_UNAVAILABLE: &str =
     "xdp-portal-unavailable";
 pub const SCRAP_X11_REQUIRED: &str = "x11 expected";
-pub const SCRAP_X11_REF_URL: &str = "https://rustdesk.com/docs/en/manual/linux/#x11-required";
+pub const SCRAP_X11_REF_URL: &str = "https://onlidesk.com/docs/en/manual/linux/#x11-required";
 
 #[cfg(not(target_os = "linux"))]
 pub const AUDIO_BUFFER_MS: usize = 3000;
@@ -527,7 +527,7 @@ impl Client {
                                     }
                                 }
                             }
-                            log::info!("{} Hole Punched {} = {}", punch_type, peer, peer_addr);
+                            log::info!("[P2P] Hole Punching concluido: {} {} = {}", punch_type, peer, peer_addr);
                             break;
                         }
                     }
@@ -690,30 +690,84 @@ impl Client {
         log::info!("peer address: {}, timeout: {}", peer, connect_timeout);
         let start = std::time::Instant::now();
 
-        let mut connect_futures = Vec::new();
-        let fut = connect_tcp_local(peer, Some(local_addr), connect_timeout);
-        connect_futures.push(
-            async move {
-                let conn = fut.await?;
-                Ok((conn, None, "TCP"))
+        let mut conn = Err(hbb_common::anyhow::anyhow!("Not started"));
+        let mut kcp = None;
+        let mut typ = "";
+
+        if let Some(udp_socket_nat) = udp_socket_nat.clone() {
+            log::info!("[P2P] Etapa 1\nTentando UDP Hole Punch");
+            if let Ok(mut count) = crate::p2p_diagnostic::UDP_ATTEMPTS.write() {
+                *count += 1;
             }
-            .boxed(),
-        );
-        if let Some(udp_socket_nat) = udp_socket_nat {
-            connect_futures.push(udp_nat_connect(udp_socket_nat, "UDP", connect_timeout).boxed());
+            match udp_nat_connect(udp_socket_nat, "UDP", connect_timeout).await {
+                Ok(res) => {
+                    conn = Ok(res.0);
+                    kcp = res.1;
+                    typ = "UDP";
+                    if let Ok(mut count) = crate::p2p_diagnostic::UDP_SUCCESS.write() {
+                        *count += 1;
+                    }
+                }
+                Err(_e) => {
+                    log::info!("[P2P] UDP Falhou\nMotivo: Timeout");
+                }
+            }
         }
-        if let Some(udp_socket_v6) = udp_socket_v6 {
-            connect_futures.push(udp_nat_connect(udp_socket_v6, "IPv6", connect_timeout).boxed());
+
+        if conn.is_err() {
+            log::info!("[P2P] Etapa 2\nTentando TCP Hole Punch");
+            if let Ok(mut count) = crate::p2p_diagnostic::TCP_ATTEMPTS.write() {
+                *count += 1;
+            }
+            let fut = connect_tcp_local(peer, Some(local_addr), connect_timeout);
+            match fut.await {
+                Ok(res) => {
+                    conn = Ok(res);
+                    typ = "TCP";
+                    if let Ok(mut count) = crate::p2p_diagnostic::TCP_SUCCESS.write() {
+                        *count += 1;
+                    }
+                }
+                Err(e) => {
+                    let err_str = e.to_string().to_lowercase();
+                    let reason_str = if err_str.contains("refused") {
+                        "[P2P] TCP Falhou\nMotivo: ConnectionRefused"
+                    } else if err_str.contains("timeout") || err_str.contains("timed out") {
+                        "[P2P] TCP Falhou\nMotivo: Timeout"
+                    } else {
+                        "[P2P] TCP Falhou\nMotivo: FirewallBlocked"
+                    };
+                    log::info!("{}", reason_str);
+                }
+            }
         }
-        // Run all connection attempts concurrently, return the first successful one
-        let (mut conn, kcp, mut typ) = match select_ok(connect_futures).await {
-            Ok(conn) => (Ok(conn.0 .0), conn.0 .1, conn.0 .2),
-            Err(e) => (Err(e), None, ""),
-        };
 
         let mut direct = !conn.is_err();
         if interface.is_force_relay() || conn.is_err() {
             if !relay_server.is_empty() {
+                log::info!("[RELAY]\nAtivando Relay");
+                
+                let reason = if interface.is_force_relay() {
+                    crate::p2p_diagnostic::P2PFailureReason::NatSymmetric
+                } else if udp_socket_nat.is_some() {
+                    crate::p2p_diagnostic::P2PFailureReason::UdpTimeout
+                } else {
+                    crate::p2p_diagnostic::P2PFailureReason::TcpTimeout
+                };
+
+                log::info!("[P2P] Fallback para Relay\nMotivo: {:?}", reason);
+
+                #[cfg(any(target_os = "android", target_os = "ios", feature = "flutter"))]
+                {
+                    if let Some(session) = crate::flutter::sessions::get_session_by_peer_id(peer_id.to_string(), conn_type) {
+                        if let Ok(handlers) = session.ui_handler.session_handlers.read() {
+                            for &sid in handlers.keys() {
+                                crate::p2p_diagnostic::set_failure_reason(sid, reason.clone());
+                            }
+                        }
+                    }
+                }
+
                 conn = Self::request_relay(
                     peer_id,
                     relay_server.to_owned(),
@@ -724,8 +778,8 @@ impl Client {
                     conn_type,
                 )
                 .await;
+
                 if let Err(e) = conn {
-                    // this direct is mainly used by on_establish_connection_error, so we update it here before bail
                     interface.update_direct(Some(false));
                     bail!("Failed to connect via relay server: {}", e);
                 }
@@ -736,11 +790,11 @@ impl Client {
             }
         }
         let mut conn = conn?;
-        log::info!(
-            "{:?} used to establish {typ} connection with {} punch",
-            start.elapsed(),
-            punch_type
-        );
+        if typ == "Relay" {
+            log::info!("[RELAY] Relay ativo: conexao estabelecida via relay em {:?} (punch: {})", start.elapsed(), punch_type);
+        } else {
+            log::info!("[P2P] Conexao direta estabelecida: {} via {} punch em {:?}", typ, punch_type, start.elapsed());
+        }
         let res = Self::secure_connection(peer_id, signed_id_pk, key, &mut conn).await;
         let pk: Option<Vec<u8>> = match res {
             Ok(pk) => pk,
@@ -2646,7 +2700,7 @@ impl LoginConfigHandler {
         #[cfg(any(target_os = "android", target_os = "ios"))]
         let my_id = Config::get_id_or(crate::DEVICE_ID.lock().unwrap().clone());
         #[cfg(not(any(target_os = "android", target_os = "ios")))]
-        let my_id = Config::get_id();
+        let my_id = Config::get_id_internal();
         let (my_id, pure_id) = if let Some((id, _, _)) = self.other_server.as_ref() {
             let server = Config::get_rendezvous_server();
             (format!("{my_id}@{server}"), id.clone())
@@ -3300,7 +3354,7 @@ lazy_static::lazy_static! {
             msgtype: "error",
             title: "Login Error",
             text: "Login screen using Wayland is not supported",
-            link: "https://rustdesk.com/docs/en/manual/linux/#login-screen",
+            link: "https://onlidesk.com/docs/en/manual/linux/#login-screen",
             try_again: true,
         }), (LOGIN_MSG_DESKTOP_SESSION_NOT_READY, LoginErrorMsgBox{
             msgtype: "session-login",
@@ -3731,7 +3785,7 @@ pub trait Interface: Send + Clone + 'static + Sized {
             && ((cfg!(windows) && (errno == 10054 || err.contains("10054")))
                 || (!cfg!(windows) && (errno == 104 || err.contains("104")))
                 || (!err.contains("Failed") && err.contains("deadline")))
-        // deadline: https://github.com/rustdesk/rustdesk-server-pro/discussions/325, most likely comes from secure tcp timeout
+        // deadline: https://github.com/onlidesk/onlidesk-server-pro/discussions/325, most likely comes from secure tcp timeout
         {
             relay_hint = true;
             if !received {
@@ -4063,7 +4117,7 @@ pub mod peer_online {
     ) -> ResultType<(Vec<String>, Vec<String>)> {
         let mut msg_out = RendezvousMessage::new();
         msg_out.set_online_request(OnlineRequest {
-            id: Config::get_id(),
+            id: Config::get_id_internal(),
             peers: ids.clone(),
             ..Default::default()
         });

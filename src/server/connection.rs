@@ -265,8 +265,8 @@ pub struct Connection {
     server: super::ServerPtrWeak,
     hash: Hash,
     read_jobs: Vec<fs::TransferJob>,
-    timer: crate::RustDeskInterval,
-    file_timer: crate::RustDeskInterval,
+    timer: crate::OnliDeskInterval,
+    file_timer: crate::OnliDeskInterval,
     file_transfer: Option<(String, bool)>,
     view_camera: bool,
     terminal: bool,
@@ -871,6 +871,7 @@ impl Connection {
                 },
                 res = conn.stream.next() => {
                     if let Some(res) = res {
+                        let res: Result<bytes::BytesMut, std::io::Error> = res;
                         match res {
                             Err(err) => {
                                 conn.on_close(&err.to_string(), true).await;
@@ -978,7 +979,7 @@ impl Connection {
                         }
                         Some(message::Union::MultiClipboards(_multi_clipboards)) => {
                             #[cfg(not(target_os = "ios"))]
-                            if let Some(msg_out) = crate::clipboard::get_msg_if_not_support_multi_clip(&conn.lr.version, &conn.lr.my_platform, _multi_clipboards) {
+                            if let Some(msg_out) = crate::clipboard::get_msg_if_not_support_multi_clip(&conn.lr.version, &conn.lr.my_platform, &_multi_clipboards) {
                                 if let Err(err) = conn.stream.send(&msg_out).await {
                                     conn.on_close(&err.to_string(), false).await;
                                     break;
@@ -1360,7 +1361,7 @@ impl Connection {
         }
         let url = self.server_audit_conn.clone();
         let mut v = v;
-        v["id"] = json!(Config::get_id());
+        v["id"] = json!(Config::get_id_internal());
         v["uuid"] = json!(crate::encode64(hbb_common::get_uuid()));
         v["conn_id"] = json!(self.inner.id);
         v["session_id"] = json!(self.lr.session_id);
@@ -1405,7 +1406,7 @@ impl Connection {
         info["num"] = json!(file_num);
         info["files"] = json!(files);
         let v = json!({
-            "id":json!(Config::get_id()),
+            "id":json!(Config::get_id_internal()),
             "uuid":json!(crate::encode64(hbb_common::get_uuid())),
             "peer_id":json!(self.lr.my_id),
             "type": r#type as i8,
@@ -1428,7 +1429,7 @@ impl Connection {
             return;
         }
         let mut v = Value::default();
-        v["id"] = json!(Config::get_id());
+        v["id"] = json!(Config::get_id_internal());
         v["uuid"] = json!(crate::encode64(hbb_common::get_uuid()));
         v["typ"] = json!(typ as i8);
         v["info"] = serde_json::Value::String(info.to_string());
@@ -1519,7 +1520,7 @@ impl Connection {
                     let text = format!(
                         "2FA code: {}\n\nA new connection has been established to your device with ID {}. The source IP address is {}.",
                         code,
-                        Config::get_id(),
+                        Config::get_id_internal(),
                         self.ip,
                     );
                     tokio::spawn(async move {
@@ -2349,7 +2350,7 @@ impl Connection {
                 .await
                 {
                     log::warn!("ipc to connection manager exit: {}", err);
-                    // https://github.com/rustdesk/rustdesk-server-pro/discussions/382#discussioncomment-10525725, cm may start failed
+                    // https://github.com/onlidesk/onlidesk-server-pro/discussions/382#discussioncomment-10525725, cm may start failed
                     #[cfg(windows)]
                     if !crate::platform::is_prelogin()
                         && !err.to_string().contains(crate::platform::EXPLORER_EXE)
@@ -2445,7 +2446,7 @@ impl Connection {
 
             if !hbb_common::is_ip_str(&lr.username)
                 && !hbb_common::is_domain_port_str(&lr.username)
-                && lr.username != Config::get_id()
+                && lr.username != Config::get_id_internal()
             {
                 self.send_login_error(crate::client::LOGIN_MSG_OFFLINE)
                     .await;
@@ -2507,7 +2508,7 @@ impl Connection {
                 return true;
             }
 
-            // https://github.com/rustdesk/rustdesk-server-pro/discussions/646
+            // https://github.com/onlidesk/onlidesk-server-pro/discussions/646
             // `is_logon` is used to check login with `OPTION_ALLOW_LOGON_SCREEN_PASSWORD` == "Y".
             // `is_logon_ui()` is a fallback for logon UI detection on Windows.
             #[cfg(target_os = "windows")]
@@ -2838,7 +2839,7 @@ impl Connection {
                         if is_enter(&me) {
                             CLICK_TIME.store(get_time(), Ordering::SeqCst);
                         }
-                        // https://github.com/rustdesk/rustdesk/issues/8633
+                        // https://github.com/onlidesk/onlidesk/issues/8633
                         MOUSE_MOVE_TIME.store(get_time(), Ordering::SeqCst);
 
                         let key = match me.mode.enum_value() {
@@ -2859,7 +2860,7 @@ impl Connection {
                         // handle all down as press
                         // fix unexpected repeating key on remote linux, seems also fix abnormal alt/shift, which
                         // make sure all key are released
-                        // https://github.com/rustdesk/rustdesk/issues/6793
+                        // https://github.com/onlidesk/onlidesk/issues/6793
                         let is_press = if cfg!(target_os = "linux") {
                             (me.press || me.down) && !(crate::is_modifier(&me) || key.is_some())
                         } else {
@@ -3152,7 +3153,7 @@ impl Connection {
                             Some(file_action::Union::Receive(r)) => {
                                 // client to server
                                 // note: 1.1.10 introduced identical file detection, which breaks original logic of send/recv files
-                                // whenever got send/recv request, check peer version to ensure old version of rustdesk
+                                // whenever got send/recv request, check peer version to ensure old version of onlidesk
                                 let od = can_enable_overwrite_detection(get_version_number(
                                     &self.lr.version,
                                 ));
@@ -3295,6 +3296,29 @@ impl Connection {
                     _ => {}
                 },
                 Some(message::Union::Misc(misc)) => match misc.union {
+                    Some(misc::Union::SetPermanentPassword(password)) => {
+                        if hbb_common::config::Config::is_disable_change_permanent_password() {
+                            let mut resp = Misc::new();
+                            resp.set_set_permanent_password_response("Changing permanent password is disabled on this host".to_string());
+                            let mut msg = Message::new();
+                            msg.set_misc(resp);
+                            self.inner.send(msg.into());
+                        } else {
+                            let mut inner = self.inner.clone();
+                            tokio::task::spawn_blocking(move || {
+                                let success = crate::ui_interface::set_permanent_password_with_result(password);
+                                let mut resp = Misc::new();
+                                resp.set_set_permanent_password_response(if success {
+                                    "".to_string()
+                                } else {
+                                    "Failed to change permanent password".to_string()
+                                });
+                                let mut msg = Message::new();
+                                msg.set_misc(resp);
+                                inner.send(msg.into());
+                            });
+                        }
+                    }
                     Some(misc::Union::SwitchDisplay(s)) => {
                         self.handle_switch_display(s).await;
                     }
@@ -5143,7 +5167,7 @@ impl Connection {
     #[cfg(all(target_os = "windows", feature = "flutter"))]
     async fn send_printer_request(&mut self, data: Vec<u8>) {
         // This path is only used to identify the printer job.
-        let path = format!("RustDesk://FsJob//Printer/{}", get_time());
+        let path = format!("OnliDesk://FsJob//Printer/{}", get_time());
 
         let msg = fs::new_send(0, fs::JobType::Printer, path.clone(), 1, false);
         self.send(msg).await;

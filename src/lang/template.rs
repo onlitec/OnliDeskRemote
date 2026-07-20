@@ -1,4 +1,4 @@
-lazy_static::lazy_static! {
+﻿lazy_static::lazy_static! {
 pub static ref T: std::collections::HashMap<&'static str, &'static str> =
     [
         ("Status", ""),
@@ -299,7 +299,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Failed to turn off", ""),
         ("Turned off", ""),
         ("Language", ""),
-        ("Keep RustDesk background service", ""),
+        ("Keep OnliDesk background service", ""),
         ("Ignore Battery Optimizations", ""),
         ("android_open_battery_optimizations_tip", ""),
         ("Start on boot", ""),
@@ -382,7 +382,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("xdp-portal-unavailable", ""),
         ("JumpLink", ""),
         ("Please Select the screen to be shared(Operate on the peer side).", ""),
-        ("Show RustDesk", ""),
+        ("Show OnliDesk", ""),
         ("This PC", ""),
         ("or", ""),
         ("Elevate", ""),
@@ -625,7 +625,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("enable-bot-desc", ""),
         ("cancel-2fa-confirm-tip", ""),
         ("cancel-bot-confirm-tip", ""),
-        ("About RustDesk", ""),
+        ("About OnliDesk", ""),
         ("Send clipboard keystrokes", ""),
         ("network_error_tip", ""),
         ("Unlock with PIN", ""),

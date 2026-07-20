@@ -1608,8 +1608,8 @@ class RustdeskImpl {
   }
 
   bool isCustomClient({dynamic hint}) {
-    // is_custom_client() checks if app name is not "RustDesk"
-    return mainGetAppNameSync(hint: hint) != "RustDesk";
+    // is_custom_client() checks if app name is not "OnliDesk"
+    return mainGetAppNameSync(hint: hint) != "OnliDesk";
   }
 
   bool isDisableSettings({dynamic hint}) {

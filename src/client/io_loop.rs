@@ -64,7 +64,7 @@ pub struct Remote<T: InvokeUiSession> {
     read_jobs: Vec<fs::TransferJob>,
     write_jobs: Vec<fs::TransferJob>,
     remove_jobs: HashMap<i32, RemoveJob>,
-    timer: crate::RustDeskInterval,
+    timer: crate::OnliDeskInterval,
     last_update_jobs_status: (Instant, HashMap<i32, u64>),
     is_connected: bool,
     first_frame: bool,
@@ -1390,7 +1390,7 @@ impl<T: InvokeUiSession> Remote<T> {
                                 }
                             }
                             // to-do: Android, is `sync_init_clipboard` really needed?
-                            // https://github.com/rustdesk/rustdesk/discussions/9010
+                            // https://github.com/onlidesk/onlidesk/discussions/9010
 
                             #[cfg(feature = "flutter")]
                             #[cfg(not(target_os = "ios"))]
@@ -1740,6 +1740,13 @@ impl<T: InvokeUiSession> Remote<T> {
                     }
                 }
                 Some(message::Union::Misc(misc)) => match misc.union {
+                    Some(misc::Union::SetPermanentPasswordResponse(err)) => {
+                        if err.is_empty() {
+                            self.handler.msgbox("info", "Change Password", "Unattended password changed successfully", "");
+                        } else {
+                            self.handler.msgbox("error", "Change Password", &err, "");
+                        }
+                    }
                     Some(misc::Union::AudioFormat(f)) => {
                         self.audio_sender.send(MediaData::AudioFormat(f)).ok();
                     }
@@ -1748,7 +1755,7 @@ impl<T: InvokeUiSession> Remote<T> {
                     }
                     Some(misc::Union::PermissionInfo(p)) => {
                         log::info!("Change permission {:?} -> {}", p.permission, p.enabled);
-                        // https://github.com/rustdesk/rustdesk/issues/3703#issuecomment-1474734754
+                        // https://github.com/onlidesk/onlidesk/issues/3703#issuecomment-1474734754
                         match p.permission.enum_value() {
                             Ok(Permission::Keyboard) => {
                                 *self.handler.server_keyboard_enabled.write().unwrap() = p.enabled;

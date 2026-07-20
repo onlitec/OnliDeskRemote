@@ -56,3 +56,17 @@ vcpkg_installed
 flutter/lib/generated_plugin_registrant.dart
 libsciter.dylib
 flutter/web/
+# ===
+# OnliDesk sensitive configs — DO NOT commit secrets
+# Use the .env file for secrets; see .env.example
+.env
+*.local.toml
+config/local_*.toml
+RustDesk2.toml
+onlidesk_credentials.json
+onlidesk_secrets.*
+
+# Build artifacts (installers) — not source; do not commit
+dist-instalador/
+# Internal infra/session notes (contain SSH hosts, IPs, NAT rules) — do not commit
+SESSAO-*.md

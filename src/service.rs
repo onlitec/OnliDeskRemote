@@ -1,4 +1,4 @@
-use librustdesk::*;
+use libonlidesk::*;
 
 #[cfg(not(target_os = "macos"))]
 fn main() {}

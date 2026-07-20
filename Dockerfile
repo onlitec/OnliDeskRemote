@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /
 ARG DEBIAN_FRONTEND=noninteractive
@@ -30,15 +30,18 @@ RUN apt update -y && \
         libgstreamer1.0-dev \
         libgstreamer-plugins-base1.0-dev \
         ca-certificates \
-        ninja-build && \
-        rm -rf /var/lib/apt/lists/*
+        ninja-build \
+        cmake \
+        && rm -rf /var/lib/apt/lists/*
 
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.6/cmake-3.30.6.tar.gz --no-check-certificate && \
-    tar xzf cmake-3.30.6.tar.gz && \
-    cd cmake-3.30.6 && \
-    ./configure  --prefix=/usr/local && \
-    make && \
-    make install
+# CMake via apt (Debian 12 tem CMake 3.25+)
+# Se precisar de versão específica, use o source tarball com checksum SHA256 fixo:
+# RUN wget https://github.com/Kitware/CMake/releases/download/v3.30.6/cmake-3.30.6.tar.gz \
+#         -O /tmp/cmake.tar.gz && \
+#     sha256sum /tmp/cmake.tar.gz && \  # verificar checksum aqui
+#     tar xzf /tmp/cmake.tar.gz -C /tmp && \
+#     cd /tmp/cmake-3.30.6 && \
+#     ./configure --prefix=/usr/local && make -j$(nproc) && make install
 
 RUN git clone --branch 2023.04.15 --depth=1 https://github.com/microsoft/vcpkg && \
     /vcpkg/bootstrap-vcpkg.sh -disableMetrics && \
@@ -46,14 +49,12 @@ RUN git clone --branch 2023.04.15 --depth=1 https://github.com/microsoft/vcpkg &
 
 RUN groupadd -r user && \
     useradd -r -g user user --home /home/user && \
-    mkdir -p /home/user/rustdesk && \
+    mkdir -p /home/user/onlidesk && \
     chown -R user: /home/user && \
     echo "user ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/user
 
 WORKDIR /home/user
-RUN curl -LO https://raw.githubusercontent.com/c-smile/sciter-sdk/master/bin.lnx/x64/libsciter-gtk.so
-
-USER user
+# OnliDesk fork: substitua pelo URL do seu release ou build interno
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup.sh && \
     chmod +x rustup.sh && \
     ./rustup.sh -y

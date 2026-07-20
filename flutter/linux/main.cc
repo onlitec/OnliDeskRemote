@@ -2,29 +2,10 @@
 #include "my_application.h"
 
 #define RUSTDESK_LIB_PATH "librustdesk.so"
-typedef bool (*RustDeskCoreMain)();
-bool gIsConnectionManager = false;
-
-void print_help_install_pkg(const char* so);
-
-bool flutter_rustdesk_core_main() {
-   void* librustdesk = dlopen(RUSTDESK_LIB_PATH, RTLD_LAZY);
-   if (!librustdesk) {
-      fprintf(stderr,"Failed to load \"librustdesk.so\"\n");
-      char* error;
-      if ((error = dlerror()) != nullptr) {
-        fprintf(stderr, "%s\n", error);
-        char* libmissed = strstr(error, ": cannot open shared object file: No such file or directory");
-        if (libmissed != nullptr) {
-          *libmissed = '\0';
-          char* so = strdup(error);
-          print_help_install_pkg(so);
-          free(so);
-        }
-      }
-     return false;
-   }
-   auto core_main = (RustDeskCoreMain) dlsym(librustdesk,"rustdesk_core_main");
+    void* librustdesk = dlopen(RUSTDESK_LIB_PATH, RTLD_LAZY);
+    if (!librustdesk) {
+       fprintf(stderr,"Failed to load \"librustdesk.so\"\n");
+    auto core_main = (RustDeskCoreMain) dlsym(librustdesk,"rustdesk_core_main");
    char* error;
    if ((error = dlerror()) != nullptr) {
        fprintf(stderr, "Program entry \"rustdesk_core_main\" is not found: %s\n", error);

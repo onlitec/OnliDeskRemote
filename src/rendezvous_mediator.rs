@@ -50,7 +50,7 @@ lazy_static::lazy_static! {
 
 // Single source of truth for the "awaiting deployment" backoff. The server has
 // already told us this device is not in its db; until the operator runs
-// `rustdesk --deploy --token <api_token>` there is no point re-running the
+// `onlidesk --deploy --token <api_token>` there is no point re-running the
 // register path more often than DEPLOY_RETRY_INTERVAL. Gating in the timer
 // loops (rather than only inside register_pk) also avoids the
 // last_register_sent / fails / latency / UDP-rebind churn the loop would
@@ -159,7 +159,7 @@ impl RendezvousMediator {
                     sleep(((timeout - elapsed) / 1000) as _).await;
                 }
             } else {
-                // https://github.com/rustdesk/rustdesk/issues/12233
+                // https://github.com/onlidesk/onlidesk/issues/12233
                 sleep(0.033).await;
             }
         }
@@ -254,7 +254,7 @@ impl RendezvousMediator {
                     // the whole register / fails / latency / UDP-rebind path until
                     // DEPLOY_RETRY_INTERVAL elapses, otherwise the loop spins every
                     // few seconds (log spam + misapplied network-recovery rebind)
-                    // until the operator runs `rustdesk --deploy`.
+                    // until the operator runs `onlidesk --deploy`.
                     if deploy_register_throttled().await {
                         continue;
                     }
@@ -328,7 +328,7 @@ impl RendezvousMediator {
                     }
                     Ok(register_pk_response::Result::NOT_DEPLOYED) => {
                         if !NEEDS_DEPLOY.load(Ordering::SeqCst) {
-                            log::warn!("Server requires deployment. Run `rustdesk --deploy --token <api_token>` on this device.");
+                            log::warn!("Server requires deployment. Run `onlidesk --deploy --token <api_token>` on this device.");
                         }
                         NEEDS_DEPLOY.store(true, Ordering::SeqCst);
                         // Clear key_confirmed so the UI reflects the truth: this device is
@@ -509,7 +509,7 @@ impl RendezvousMediator {
         if initiate {
             rr.uuid = uuid.clone();
             rr.relay_server = relay_server.clone();
-            rr.set_id(Config::get_id());
+            rr.set_id(Config::get_id_internal());
         }
         msg_out.set_relay_response(rr);
         socket.send(&msg_out).await?;
@@ -592,7 +592,7 @@ impl RendezvousMediator {
             format!("{}:{}", local_addr.ip(), local_addr.port()).parse()?;
         let mut msg_out = Message::new();
         msg_out.set_local_addr(LocalAddr {
-            id: Config::get_id(),
+            id: Config::get_id_internal(),
             socket_addr: AddrMangle::encode(peer_addr).into(),
             local_addr: AddrMangle::encode(local_addr).into(),
             relay_server,
@@ -641,6 +641,7 @@ impl RendezvousMediator {
             || relay
             || (config::is_disable_tcp_listen() && ph.udp_port <= 0)
         {
+            log::info!("[P2P] Falha NAT traversal: NAT Symmetric ou relay forcado — usando relay server: {}", relay_server);
             let uuid = Uuid::new_v4().to_string();
             return self
                 .create_relay(
@@ -659,7 +660,7 @@ impl RendezvousMediator {
         let nat_type = NatType::from_i32(Config::get_nat_type()).unwrap_or(NatType::UNKNOWN_NAT);
         let msg_punch = PunchHoleSent {
             socket_addr: ph.socket_addr,
-            id: Config::get_id(),
+            id: Config::get_id_internal(),
             relay_server,
             nat_type: nat_type.into(),
             version: crate::VERSION.to_owned(),
@@ -668,6 +669,7 @@ impl RendezvousMediator {
         };
         if ph.udp_port > 0 {
             peer_addr.set_port(ph.udp_port as u16);
+            log::info!("[P2P] Hole Punching UDP iniciado para {:?}", peer_addr);
             self.punch_udp_hole(peer_addr, server, msg_punch, control_permissions)
                 .await?;
             return Ok(());
@@ -725,7 +727,7 @@ impl RendezvousMediator {
         // Throttle register_pk when the device is awaiting deployment: server
         // already told us we're not in its db; sending more often than every
         // DEPLOY_RETRY_INTERVAL ms is wasted traffic until the operator runs
-        // `rustdesk --deploy --token <api_token>`.
+        // `onlidesk --deploy --token <api_token>`.
         if NEEDS_DEPLOY.load(Ordering::SeqCst) {
             let mut last = LAST_NOT_DEPLOYED_REGISTER.lock().await;
             if let Some(t) = *last {
@@ -740,7 +742,7 @@ impl RendezvousMediator {
         let mut msg_out = Message::new();
         let pk = Config::get_key_pair().1;
         let uuid = hbb_common::get_uuid();
-        let id = Config::get_id();
+        let id = Config::get_id_internal();
         msg_out.set_register_pk(RegisterPk {
             id,
             uuid: uuid.into(),
@@ -781,7 +783,7 @@ impl RendezvousMediator {
             );
             return self.register_pk(socket).await;
         }
-        let id = Config::get_id();
+        let id = Config::get_id_internal();
         log::trace!(
             "Register my id {:?} to rendezvous server {:?}",
             id,

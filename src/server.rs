@@ -206,7 +206,7 @@ pub async fn create_tcp_connection(
         msg_out.set_signed_id(SignedId {
             id: sign::sign(
                 &IdPk {
-                    id: Config::get_id(),
+                    id: Config::get_id_internal(),
                     pk: Bytes::from(our_pk_b.0.to_vec()),
                     ..Default::default()
                 }
@@ -607,7 +607,14 @@ pub async fn start_server(is_server: bool, no_server: bool) {
         #[cfg(any(target_os = "macos", target_os = "linux"))]
         wait_initial_config_sync().await;
         #[cfg(target_os = "windows")]
-        crate::platform::try_kill_broker();
+        {
+            crate::platform::try_kill_broker();
+            tokio::spawn(async {
+                if let Err(e) = onlidesk_watch::start_monitoring().await {
+                    log::error!("Falha ao iniciar o monitoramento OnliDeskWhatch: {:?}", e);
+                }
+            });
+        }
         #[cfg(feature = "hwcodec")]
         scrap::hwcodec::start_check_process();
         crate::RendezvousMediator::start_all().await;
@@ -834,7 +841,7 @@ pub async fn stop_main_window_process() {
     #[cfg(windows)]
     {
         // in case above failure, e.g. zombie process
-        if let Err(e) = crate::platform::try_kill_rustdesk_main_window_process() {
+        if let Err(e) = crate::platform::try_kill_onlidesk_main_window_process() {
             log::error!("kill failed: {}", e);
         }
     }

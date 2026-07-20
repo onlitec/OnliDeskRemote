@@ -79,7 +79,7 @@ fn initialize(app_dir: &str, custom_client_config: &str) {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         // core_main's init_log does not work for flutter since it is only applied to its load_library in main.c
-        hbb_common::init_log(false, "flutter_ffi");
+        hbb_common::init_log(true, "flutter_ffi");
     }
 }
 
@@ -661,6 +661,12 @@ pub fn session_input_string(session_id: SessionID, value: String) {
 pub fn session_send_chat(session_id: SessionID, text: String) {
     if let Some(session) = sessions::get_session_by_session_id(&session_id) {
         session.send_chat(text);
+    }
+}
+
+pub fn session_change_unattended_password(session_id: SessionID, password: String) {
+    if let Some(session) = sessions::get_session_by_session_id(&session_id) {
+        session.change_unattended_password(password);
     }
 }
 
@@ -2276,6 +2282,22 @@ pub fn version_to_number(v: String) -> SyncReturn<i64> {
     SyncReturn(hbb_common::get_version_number(&v))
 }
 
+pub fn session_connection_method(session_id: SessionID) -> SyncReturn<String> {
+    SyncReturn(crate::p2p_diagnostic::get_session_connection_method(session_id))
+}
+
+pub fn get_diagnostic_panel_info(session_id: SessionID) -> SyncReturn<String> {
+    SyncReturn(crate::p2p_diagnostic::get_diagnostic_panel_info_json(session_id))
+}
+
+pub fn get_operational_metrics() -> SyncReturn<String> {
+    SyncReturn(crate::p2p_diagnostic::get_operational_metrics_json())
+}
+
+pub fn get_connectivity_history() -> SyncReturn<String> {
+    SyncReturn(crate::p2p_diagnostic::get_connectivity_history_json())
+}
+
 pub fn option_synced() -> bool {
     crate::ui_interface::option_synced()
 }
@@ -2833,8 +2855,8 @@ pub fn main_get_common(key: String) -> String {
                 crate::platform::windows::is_msi_installed(),
                 crate::common::is_custom_client(),
             ) {
-                (Ok(true), false) => format!("rustdesk-{_version}-x86_64.msi"),
-                (Ok(true), true) | (Ok(false), _) => format!("rustdesk-{_version}-x86_64.exe"),
+                (Ok(true), false) => format!("onlidesk-{_version}-x86_64.msi"),
+                (Ok(true), true) | (Ok(false), _) => format!("onlidesk-{_version}-x86_64.exe"),
                 (Err(e), _) => {
                     log::error!("Failed to check if is msi: {}", e);
                     format!("error:update-failed-check-msi-tip")
@@ -2843,9 +2865,9 @@ pub fn main_get_common(key: String) -> String {
             #[cfg(target_os = "macos")]
             {
                 return if cfg!(target_arch = "x86_64") {
-                    format!("rustdesk-{_version}-x86_64.dmg")
+                    format!("onlidesk-{_version}-x86_64.dmg")
                 } else if cfg!(target_arch = "aarch64") {
-                    format!("rustdesk-{_version}-aarch64.dmg")
+                    format!("onlidesk-{_version}-aarch64.dmg")
                 } else {
                     "error:unsupported".to_owned()
                 };
