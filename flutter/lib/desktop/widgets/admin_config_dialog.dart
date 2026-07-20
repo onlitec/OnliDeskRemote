@@ -77,7 +77,7 @@ class _AdminConfigDialogState extends State<AdminConfigDialog> {
           "mikrotik_poll_interval_secs": 10,
           "monitored_paths": [],
           "local_log_path": "C:\\ProgramData\\OnliDeskWhatch\\logs\\audit.log",
-          "webhook_url": "https://onlideskwatch.onlitec.com.br/api/logs",
+          "webhook_url": "https://onlideskwhatch.onlitec.com.br/api/logs",
           "webhook_token": "WatchSecretToken2026",
           "admin_password_hash": ""
         };
