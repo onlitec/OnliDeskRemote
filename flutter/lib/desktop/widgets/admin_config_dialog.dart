@@ -113,6 +113,13 @@ class _AdminConfigDialogState extends State<AdminConfigDialog> {
   // Salva as configurações de volta para o JSON
   void _saveConfig() {
     try {
+      // Inclui um caminho digitado mas ainda nao adicionado com o botao "+".
+      final pending = _newPathController.text.trim();
+      if (pending.isNotEmpty && !_monitoredPaths.contains(pending)) {
+        _monitoredPaths.add(pending);
+        _newPathController.clear();
+      }
+
       final file = _getConfigFile();
       if (!file.parent.existsSync()) {
         file.parent.createSync(recursive: true);

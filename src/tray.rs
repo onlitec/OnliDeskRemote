@@ -30,26 +30,40 @@ fn make_tray() -> hbb_common::ResultType<()> {
         menu::{Menu, MenuEvent, MenuItem},
         TrayIcon, TrayIconBuilder, TrayIconEvent as TrayEvent,
     };
-    let icon;
+    let icon: Vec<u8>;
     #[cfg(target_os = "macos")]
     {
-        icon = include_bytes!("../res/mac-tray-dark-x2.png"); // use as template, so color is not important
+        icon = include_bytes!("../res/mac-tray-dark-x2.png").to_vec(); // template, color não importa
     }
     #[cfg(not(target_os = "macos"))]
     {
-        icon = include_bytes!("../res/tray-icon.ico");
+        // PNG embutido (decodificador sempre disponível). O `.ico` embutido dava
+        // erro de decode em runtime em algumas builds -> `make_tray` falhava e o
+        // ícone não aparecia. Carregamento robusto: asset -> PNG -> fallback.
+        icon = include_bytes!("../res/tray-icon.png").to_vec();
     }
 
     let (icon_rgba, icon_width, icon_height) = {
-        let image = load_icon_from_asset()
-            .unwrap_or(image::load_from_memory(icon).context("Failed to open icon path")?)
-            .into_rgba8();
-        let (width, height) = image.dimensions();
-        let rgba = image.into_raw();
-        (rgba, width, height)
+        let loaded = load_icon_from_asset().or_else(|| image::load_from_memory(&icon).ok());
+        match loaded {
+            Some(im) => {
+                let rgba = im.into_rgba8();
+                let (w, h) = rgba.dimensions();
+                (rgba.into_raw(), w, h)
+            }
+            None => {
+                log::error!("Tray: falha ao decodificar o ícone; usando fallback sólido.");
+                (vec![120u8; 32 * 32 * 4], 32u32, 32u32)
+            }
+        }
     };
-    let icon = tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height)
-        .context("Failed to open icon")?;
+    let icon = match tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height) {
+        Ok(i) => i,
+        Err(e) => {
+            log::error!("Tray: from_rgba falhou ({e}); usando ícone de fallback.");
+            tray_icon::Icon::from_rgba(vec![120u8; 32 * 32 * 4], 32, 32).context("tray fallback icon")?
+        }
+    };
 
     let mut event_loop = EventLoopBuilder::new().build();
 
