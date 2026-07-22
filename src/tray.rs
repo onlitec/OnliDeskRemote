@@ -8,11 +8,15 @@ use std::sync::{Arc, Mutex};
 #[cfg(windows)]
 use std::time::Duration;
 
-// ── Proteção admin para "Parar Serviço" ──────────────────────────────────────
+#[cfg(windows)]
+fn watch_config_path() -> &'static std::path::Path {
+    std::path::Path::new(r"C:\ProgramData\OnliDeskWhatch\watch_config.json")
+}
+
 /// Lê o hash da senha de admin armazenado em watch_config.json.
 #[cfg(windows)]
 fn watch_admin_password_hash() -> String {
-    let path = std::path::Path::new(r"C:\ProgramData\OnliDeskWhatch\watch_config.json");
+    let path = watch_config_path();
     if let Ok(content) = std::fs::read_to_string(path) {
         if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
             if let Some(h) = val.get("admin_password_hash").and_then(|v| v.as_str()) {
@@ -24,27 +28,26 @@ fn watch_admin_password_hash() -> String {
 }
 
 /// Verifica a senha contra o hash sha256$salt$hash armazenado.
+/// Se stored_hash for vazio (config inicial recém criada pelo instalador), aceita "admin123".
 #[cfg(windows)]
 fn verify_watch_admin_password(password: &str, stored: &str) -> bool {
     if stored.is_empty() {
-        // sem hash configurado — não protege (compatibilidade com instalações antigas)
-        return true;
+        // Primeiro acesso (hash ainda não configurado): aceita a senha inicial padrão "admin123"
+        return password == "admin123";
     }
     let parts: Vec<&str> = stored.split('$').collect();
     if parts.len() == 3 && parts[0] == "sha256" {
         // decode hex salt
         let salt_hex = parts[1];
-        let mut salt = Vec::with_capacity(salt_hex.len() / 2);
         let bytes: Vec<u8> = salt_hex.as_bytes().chunks(2).filter_map(|c| {
             let hi = (c[0] as char).to_digit(16)? as u8;
             let lo = (c[1] as char).to_digit(16)? as u8;
             Some((hi << 4) | lo)
         }).collect();
-        salt = bytes;
 
         use sha2::{Digest, Sha256};
         let mut hasher = Sha256::new();
-        hasher.update(&salt);
+        hasher.update(&bytes);
         hasher.update(password.as_bytes());
         let digest = hasher.finalize();
         // encode digest as hex and compare
@@ -143,12 +146,12 @@ fn prompt_admin_password(title: &str, message: &str) -> Option<String> {
 /// Usa CredUI em Windows; em outros SO retorna true sem pedir senha.
 #[cfg(windows)]
 fn authorize_stop_service() -> bool {
-    let stored_hash = watch_admin_password_hash();
-
-    // Se não há hash configurado (instalação sem OnliDeskWhatch), permite parar sem senha
-    if stored_hash.is_empty() {
+    // Se não for instalação com OnliDeskWhatch (config não existe), permite fechar sem senha
+    if !watch_config_path().exists() {
         return true;
     }
+
+    let stored_hash = watch_admin_password_hash();
 
     let password = match prompt_admin_password(
         "OnliDesk — Autenticação de Administrador",
