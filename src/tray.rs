@@ -68,7 +68,7 @@ fn prompt_admin_password(title: &str, message: &str) -> Option<String> {
     use winapi::ctypes::c_void;
     use winapi::um::wincred::{
         CredFree, CredUIPromptForWindowsCredentialsW, CredUnPackAuthenticationBufferW,
-        CREDUI_INFOW, CREDUIWIN_ENUMERATE_ADMINS, CREDUI_MAX_PASSWORD_LENGTH,
+        CREDUI_INFOW, CREDUIWIN_GENERIC, CREDUI_MAX_PASSWORD_LENGTH,
     };
     use winapi::shared::minwindef::DWORD;
 
@@ -100,7 +100,11 @@ fn prompt_admin_password(title: &str, message: &str) -> Option<String> {
             &mut out_buf as *mut *mut c_void,
             &mut out_size,
             &mut save,
-            CREDUIWIN_ENUMERATE_ADMINS,
+            // Genérico: caixa simples de usuário/senha, sem listar contas do
+            // Windows (CREDUIWIN_ENUMERATE_ADMINS fazia o Windows mostrar o
+            // seletor de contas de administrador do SISTEMA, o que parecia
+            // pedir login do Windows em vez da senha do próprio app).
+            CREDUIWIN_GENERIC,
         )
     };
 
@@ -154,8 +158,8 @@ fn authorize_stop_service() -> bool {
     let stored_hash = watch_admin_password_hash();
 
     let password = match prompt_admin_password(
-        "OnliDesk — Autenticação de Administrador",
-        "Digite a senha de administrador para parar o serviço de monitoramento.",
+        "OnliDesk — Senha do Administrador (painel OnliDeskWhatch)",
+        "Esta NÃO é a senha da sua conta do Windows.\nDigite a senha de administrador do painel OnliDeskWhatch para parar o serviço de monitoramento. Usuário: deixe em branco.",
     ) {
         Some(p) => p,
         None => {
