@@ -41,6 +41,7 @@ unix-file-copy-paste = [
     "clipboard/unix-file-copy-paste",
 ]
 screencapturekit = ["cpal/screencapturekit"]
+
 # OnliDeskWhatch monitoring variant. Off by default => pure OnliDesk (remote
 # access only). Enable with `--features watch` to build the OnliDeskWhatch product.
 watch = ["dep:onlidesk-watch"]
@@ -165,7 +166,7 @@ piet-coregraphics = "0.6"
 foreign-types = "0.3"
 
 [target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))'.dependencies]
-tray-icon = { git = "https://github.com/tauri-apps/tray-icon", version = "0.21.3" }
+tray-icon = { git = "https://github.com/tauri-apps/tray-icon", tag = "tray-icon-v0.21.3", version = "0.21.3" }
 tao = { git = "https://github.com/rustdesk-org/tao", branch = "dev" }
 image = "0.24"
 
