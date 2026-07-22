@@ -8,6 +8,182 @@ use std::sync::{Arc, Mutex};
 #[cfg(windows)]
 use std::time::Duration;
 
+// ── Proteção admin para "Parar Serviço" ──────────────────────────────────────
+/// Lê o hash da senha de admin armazenado em watch_config.json.
+#[cfg(windows)]
+fn watch_admin_password_hash() -> String {
+    let path = std::path::Path::new(r"C:\ProgramData\OnliDeskWhatch\watch_config.json");
+    if let Ok(content) = std::fs::read_to_string(path) {
+        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+            if let Some(h) = val.get("admin_password_hash").and_then(|v| v.as_str()) {
+                return h.to_string();
+            }
+        }
+    }
+    String::new()
+}
+
+/// Verifica a senha contra o hash sha256$salt$hash armazenado.
+#[cfg(windows)]
+fn verify_watch_admin_password(password: &str, stored: &str) -> bool {
+    if stored.is_empty() {
+        // sem hash configurado — não protege (compatibilidade com instalações antigas)
+        return true;
+    }
+    let parts: Vec<&str> = stored.split('$').collect();
+    if parts.len() == 3 && parts[0] == "sha256" {
+        // decode hex salt
+        let salt_hex = parts[1];
+        let mut salt = Vec::with_capacity(salt_hex.len() / 2);
+        let bytes: Vec<u8> = salt_hex.as_bytes().chunks(2).filter_map(|c| {
+            let hi = (c[0] as char).to_digit(16)? as u8;
+            let lo = (c[1] as char).to_digit(16)? as u8;
+            Some((hi << 4) | lo)
+        }).collect();
+        salt = bytes;
+
+        use sha2::{Digest, Sha256};
+        let mut hasher = Sha256::new();
+        hasher.update(&salt);
+        hasher.update(password.as_bytes());
+        let digest = hasher.finalize();
+        // encode digest as hex and compare
+        let digest_hex: String = digest.iter().map(|b| format!("{:02x}", b)).collect();
+        return digest_hex == parts[2];
+    }
+    // compatibilidade: senha em texto plano
+    stored == password
+}
+
+/// Exibe um diálogo Win32 nativo pedindo a senha do administrador.
+/// Retorna `Some(senha)` se o usuário confirmou, `None` se cancelou.
+#[cfg(windows)]
+fn prompt_admin_password(title: &str, message: &str) -> Option<String> {
+    use std::ffi::OsStr;
+    use std::iter::once;
+    use std::os::windows::ffi::OsStrExt;
+    use winapi::ctypes::c_void;
+    use winapi::um::wincred::{
+        CredFree, CredUIPromptForWindowsCredentialsW, CredUnPackAuthenticationBufferW,
+        CREDUI_INFOW, CREDUIWIN_ENUMERATE_ADMINS, CREDUI_MAX_PASSWORD_LENGTH,
+    };
+    use winapi::shared::minwindef::DWORD;
+
+    let to_wide = |s: &str| -> Vec<u16> { OsStr::new(s).encode_wide().chain(once(0)).collect() };
+
+    let w_title   = to_wide(title);
+    let w_message = to_wide(message);
+
+    let ui_info = CREDUI_INFOW {
+        cbSize: std::mem::size_of::<CREDUI_INFOW>() as DWORD,
+        hwndParent: std::ptr::null_mut(),
+        pszMessageText: w_message.as_ptr(),
+        pszCaptionText: w_title.as_ptr(),
+        hbmBanner: std::ptr::null_mut(),
+    };
+
+    let mut auth_pkg: DWORD = 0;
+    let mut out_buf: *mut c_void = std::ptr::null_mut();
+    let mut out_size: DWORD = 0;
+    let mut save: winapi::shared::minwindef::BOOL = 0;
+
+    let ret = unsafe {
+        CredUIPromptForWindowsCredentialsW(
+            &ui_info as *const _ as *mut _,
+            0,
+            &mut auth_pkg,
+            std::ptr::null(),
+            0,
+            &mut out_buf as *mut *mut c_void,
+            &mut out_size,
+            &mut save,
+            CREDUIWIN_ENUMERATE_ADMINS,
+        )
+    };
+
+    if ret != 0 || out_buf.is_null() {
+        return None; // usuário cancelou
+    }
+
+    // Extrai a senha do buffer retornado pela CredUI
+    let mut user_buf   = vec![0u16; 256];
+    let mut domain_buf = vec![0u16; 256];
+    let mut pass_buf   = vec![0u16; CREDUI_MAX_PASSWORD_LENGTH as usize];
+    let mut user_len   = user_buf.len() as DWORD;
+    let mut domain_len = domain_buf.len() as DWORD;
+    let mut pass_len   = pass_buf.len() as DWORD;
+
+    let unpacked = unsafe {
+        CredUnPackAuthenticationBufferW(
+            0,
+            out_buf as *mut c_void,
+            out_size,
+            user_buf.as_mut_ptr(),
+            &mut user_len,
+            domain_buf.as_mut_ptr(),
+            &mut domain_len,
+            pass_buf.as_mut_ptr(),
+            &mut pass_len,
+        )
+    };
+
+    // Libera o buffer de saída
+    unsafe { CredFree(out_buf as *mut c_void) };
+
+    if unpacked == 0 {
+        return None;
+    }
+
+    // pass_len já conta o nulo terminal — ajusta para não incluí-lo
+    let len = if pass_len > 0 { pass_len as usize - 1 } else { 0 };
+    Some(String::from_utf16_lossy(&pass_buf[..len]))
+}
+
+/// Verifica autenticação de admin e retorna true se autorizado a parar o serviço.
+/// Usa CredUI em Windows; em outros SO retorna true sem pedir senha.
+#[cfg(windows)]
+fn authorize_stop_service() -> bool {
+    let stored_hash = watch_admin_password_hash();
+
+    // Se não há hash configurado (instalação sem OnliDeskWhatch), permite parar sem senha
+    if stored_hash.is_empty() {
+        return true;
+    }
+
+    let password = match prompt_admin_password(
+        "OnliDesk — Autenticação de Administrador",
+        "Digite a senha de administrador para parar o serviço de monitoramento.",
+    ) {
+        Some(p) => p,
+        None => {
+            log::info!("Tray: stop-service cancelado pelo usuário.");
+            return false;
+        }
+    };
+
+    if verify_watch_admin_password(&password, &stored_hash) {
+        log::info!("Tray: stop-service autorizado pelo administrador.");
+        true
+    } else {
+        log::warn!("Tray: stop-service negado — senha incorreta.");
+        // Mostra mensagem de erro
+        use std::ffi::OsStr;
+        use std::iter::once;
+        use std::os::windows::ffi::OsStrExt;
+        let msg: Vec<u16> = OsStr::new("Senha incorreta. O serviço não foi parado.").encode_wide().chain(once(0)).collect();
+        let title: Vec<u16> = OsStr::new("OnliDesk — Acesso negado").encode_wide().chain(once(0)).collect();
+        unsafe {
+            winapi::um::winuser::MessageBoxW(
+                std::ptr::null_mut(),
+                msg.as_ptr(),
+                title.as_ptr(),
+                winapi::um::winuser::MB_ICONERROR | winapi::um::winuser::MB_OK,
+            );
+        }
+        false
+    }
+}
+
 pub fn start_tray() {
     if crate::ui_interface::get_builtin_option(hbb_common::config::keys::OPTION_HIDE_TRAY) == "Y" {
         #[cfg(not(target_os = "macos"))]
@@ -184,14 +360,20 @@ fn make_tray() -> hbb_common::ResultType<()> {
         if let Ok(event) = menu_channel.try_recv() {
             if let Some(quit_i) = &quit_i {
                 if event.id == quit_i.id() {
-                    /* failed in windows, seems no permission to check system process
-                    if !crate::check_process("--server", false) {
-                        *control_flow = ControlFlow::Exit;
-                        return;
+                    // Protegido por senha de admin do OnliDeskWhatch
+                    #[cfg(windows)]
+                    {
+                        if !authorize_stop_service() {
+                            // senha errada ou cancelado — não faz nada
+                        } else if !crate::platform::uninstall_service(false, false) {
+                            *control_flow = ControlFlow::Exit;
+                        }
                     }
-                    */
-                    if !crate::platform::uninstall_service(false, false) {
-                        *control_flow = ControlFlow::Exit;
+                    #[cfg(not(windows))]
+                    {
+                        if !crate::platform::uninstall_service(false, false) {
+                            *control_flow = ControlFlow::Exit;
+                        }
                     }
                 } else if event.id == open_i.id() {
                     open_func();

@@ -123,6 +123,7 @@ winapi = { version = "0.3", features = [
     "cfgmgr32",
     "ioapiset",
     "winspool",
+    "wincred",
 ] }
 windows = { version = "0.61", features = [
     "Win32",
