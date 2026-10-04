@@ -1,3 +1,20 @@
+# OnliDesk Remote
+
+Cliente de **acesso remoto** da Onlitec, baseado em um fork do RustDesk (Rust + Flutter).
+
+| Componente | Repositório | Função |
+|---|---|---|
+| Cliente de acesso remoto | este repositório | Suporte técnico e acesso remoto a desktops |
+| Monitoramento (opcional) | [OnliDeskWatch](https://github.com/onlitec/OnliDeskWatch), submódulo `OnliDeskWhatch/` | Auditoria de acessos a sites e de arquivos; compile com `--features watch` |
+
+> Não confundir com o app de **gestão de ordens de serviço em campo** (`OnliDesk-App` / `ONLIDESK-WEB`), que é outro produto.
+
+Instalação no Windows: `instalar-onlidesk.ps1` / `instalar-onlidesk.bat`. Documentação do monitoramento: `docs/OnliDeskWhatch-Documentacao.md`.
+
+> O restante deste README vem do projeto upstream e ainda contém links para `onlidesk/onlidesk` e `onlidesk.com`. Revise-os antes de divulgar.
+
+---
+
 <p align="center">
   <img src="res/logo-header.svg" alt="OnliDesk - Your remote desktop"><br>
   <a href="#raw-steps-to-build">Build</a> •
